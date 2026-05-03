@@ -8,12 +8,13 @@ from pytz import timezone, utc
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+import matplotlib.patches as patches
 # skyfield for star data 
 from skyfield.api import Star, load, wgs84
 from skyfield.data import hipparcos
 from skyfield.projections import build_stereographic_projection
 import timezonefinder.timezonefinder
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy
 
 
 
@@ -22,7 +23,7 @@ class StarrySky(QWidget):
                 super().__init__()
                 self.setWindowTitle("Star Mapper")
 
-                self.setMinimumSize(400, 300)
+                self.setMinimumSize(700, 850)
 
                 self.location_input = QLineEdit()
                 self.location_input.setPlaceholderText("City (example: Delhi,  Melbourne etc.)")
@@ -42,6 +43,12 @@ class StarrySky(QWidget):
 
                 self.minute_input = QLineEdit()
                 self.minute_input.setPlaceholderText("MM(Minutes)")
+
+                
+                self.figure = Figure()
+                self.figure = Figure(figsize=(6, 6))
+                self.canvas = FigureCanvas(self.figure)
+                self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
 
                 self.status = QLabel("Enter details and click button")
@@ -64,6 +71,7 @@ class StarrySky(QWidget):
                 layout.addLayout(time_layout)
                 layout.addWidget(self.button)
                 layout.addWidget(self.status)
+                layout.addWidget(self.canvas)
 
                 self.setLayout(layout)
 
@@ -129,25 +137,42 @@ class StarrySky(QWidget):
                         br_stars = (stars.magnitude <= min_magnitude)
                         magnitude = stars['magnitude'][br_stars]
 
-                        fig, ax = plt.subplots(figsize=(plot_size*2, plot_size))
+                        self.figure.clear()
+                        ax = self.figure.add_subplot(111)    
+
+                        # fig, ax = plt.subplots(figsize=(plot_size*2, plot_size))
+                        
+                        ax.set_facecolor("black")
+                        self.figure.patch.set_facecolor("black")
                         border = plt.Rectangle((-1, -1), plot_size*2, plot_size, color='black', fill=True)
 
                         ax.add_patch(border)
 
                         star_size = max_size_star * 10 ** (magnitude / -2.5) #formula to calculate star brightness 
-                        ax.scatter(stars['x'][br_stars], stars['y'][br_stars], s=star_size, marker='.', color='white', linewidths=0, zorder=2)
+                        scatter = ax.scatter(stars['x'][br_stars], stars['y'][br_stars], s=star_size, marker='.', color='white', linewidths=0, zorder=2)
 
-                        horizon = plt.Rectangle((-1, -1), plot_size*2, plot_size, transform=ax.transData)
-                        for col in ax.collections:
-                                col.set_clip_path(horizon)
+                        #horizon = plt.Rectangle((-1, -1), plot_size, plot_size, transform=ax.transData)
+                        #scatter.set_clip_path(horizon)
+                        circle = patches.Circle((0, 0), 1, transform=ax.transData)
+                        scatter.set_clip_path(circle)
+                        #for col in ax.collections:
+                        #        col.set_clip_path(horizon)
 
                         ax.set_xlim(-1, 1)
                         ax.set_ylim(-1, 1)
+
+                        ax.set_aspect('equal', adjustable='box')
+                        ax.margins(0)
                         plt.axis('off')
 
-                        plt.show()
+                        ax.set_position([0, 0, 1, 1])
+                        self.figure.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
+                        #plt.show()
 
                         self.status.setText("Star map generated!")
+                        self.canvas.draw()
+
                 except Exception as error:
                         self.status.setText(error)
 
