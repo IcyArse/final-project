@@ -4,6 +4,7 @@ from datetime import datetime
 from geopy import Nominatim
 import timezonefinder
 from pytz import timezone, utc
+import timezonefinder.timezonefinder
 # matplotlib to help display our star map
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -13,7 +14,7 @@ import matplotlib.patches as patches
 from skyfield.api import Star, load, wgs84
 from skyfield.data import hipparcos
 from skyfield.projections import build_stereographic_projection
-import timezonefinder.timezonefinder
+# UI libraries
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy
 
 
